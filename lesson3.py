@@ -38,13 +38,15 @@ response = client.responses.create(
 print(response.model_dump_json(indent=2))
 
 # What is the type of this response?
+print("response type:")
 print(type(response))
 
 # What is just the message content?
+print("response.output_text:")
 print(response.output_text)
 
 # How do I say to access whatever object inside this response method?
-print("TESTEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE")
+print("response.max_output_tokens:")
 print(response.max_output_tokens)
 
 
@@ -54,6 +56,7 @@ print(response.max_output_tokens)
 # You need to pass the response ID from the previous response
 response_id = response.id
 
+print("response_id:")
 print(response_id)
 
 # curl https://api.openai.com/v1/responses/{response_id} \

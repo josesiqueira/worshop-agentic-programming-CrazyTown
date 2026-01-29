@@ -29,7 +29,7 @@ agent = Agent(
     instructions='Be concise, reply with one sentence.',  
 )
 
-result = agent.run_sync('Where does "hello world" come from?')  
+result = agent.run_sync('How do you say: Always check: your AI responses, in finnish?')  
 print(result.output)
 
 # -- RUN WITH ANTHROPIC --
@@ -44,6 +44,6 @@ print(result.output)
 #     instructions='Be concise, reply with one sentence.',  
 # )
 
-# result = agent.run_sync('Where does "hello world" come from?')  
+# result = agent.run_sync('Do I still need to learn programming in 2026?')  
 # print(result.output)
 

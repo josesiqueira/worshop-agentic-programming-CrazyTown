@@ -1,6 +1,10 @@
 r"""
-Lesson 11: Pydantic AI agent framework - Extracting structured information from an image, in an agentic way with watch folder
-Not using database, just a CSV file, it is appending at the end of the file, every time a new image is processed.
+Lesson 11: Pydantic AI agent framework - Extracting structured information from an image, in an agentic way with watch folder.
+This time with 2 agents.
+The first agent is doing the extraction of the structured information from the image.
+The second agent is doing a web search for the genres of each band.
+
+# async version.
 
 Setup:
 
@@ -12,20 +16,19 @@ Always create a virtual environment
 Install the dependencies
 1. pip3 install pydantic_ai
 2. pip3 install dotenv
-3. pip3 install watchdog
 
 You can, however, install dependencies through pip freeze and a requirements.txt file:
 1. pip3 freeze > requirements.txt
 2. pip3 install -r requirements.txt
 """
 
+import asyncio
 import csv
-import time
 from pathlib import Path
 from datetime import datetime
 
 from pydantic import BaseModel
-from pydantic_ai import Agent, BinaryContent
+from pydantic_ai import Agent, BinaryContent, WebSearchTool
 from dotenv import load_dotenv
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler, FileCreatedEvent
@@ -34,7 +37,7 @@ load_dotenv()
 
 # Configuration
 WATCH_FOLDER = Path("images_watchfolder")
-CSV_OUTPUT = Path("concerts.csv")
+CSV_OUTPUT = Path("concerts-async.csv")
 IMAGE_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.gif', '.webp'}
 
 
@@ -54,7 +57,27 @@ class ConcertExtraction(BaseModel):
     bands: list[BandInfo]
 
 
-agent = Agent(
+class BandEnrichment(BaseModel):
+    """Enriched information about a band from web search"""
+    genre: str
+    country: str
+
+
+class EnrichedBandInfo(BaseModel):
+    """Band info with additional enrichment data"""
+    band_name: str
+    genre: str
+    country: str
+    concerts: list[Concert]
+
+
+class EnrichedConcertExtraction(BaseModel):
+    """Concert extraction with enriched band information"""
+    bands: list[EnrichedBandInfo]
+
+
+# Agent 1: Extract concert info from images
+extraction_agent = Agent(
     'openai:gpt-5.2',
     output_type=ConcertExtraction,
     instructions="""
@@ -67,6 +90,20 @@ agent = Agent(
     - The event/festival name (if it's part of a named event like a festival)
     If any information is unclear or missing, use "Unknown" as the value.
     Leave event_name as null if there's no specific event/festival name.
+    """,
+)
+
+# Agent 2: Enrich band info with genre and country via web search
+enrichment_agent = Agent(
+    'openai-responses:gpt-5.2',
+    output_type=BandEnrichment,
+    builtin_tools=[WebSearchTool()],
+    instructions="""
+    You are given a band name. Use web search to find information about the band.
+    Find:
+    - The music genre(s) of the band (e.g., "Rock", "Heavy Metal", "Pop")
+    - The country of origin (e.g., "USA", "UK", "Sweden")
+    If you cannot find the information, use "Unknown" as the value.
     """,
 )
 
@@ -89,11 +126,11 @@ def initialize_csv():
     if not CSV_OUTPUT.exists():
         with open(CSV_OUTPUT, 'w', newline='') as f:
             writer = csv.writer(f)
-            writer.writerow(['timestamp', 'source_image', 'band_name', 'venue', 'location', 'date', 'event_name'])
+            writer.writerow(['timestamp', 'source_image', 'band_name', 'genre', 'country', 'venue', 'location', 'date', 'event_name'])
         print(f"Created {CSV_OUTPUT}")
 
 
-def append_to_csv(source_image: str, extraction: ConcertExtraction):
+def append_to_csv(source_image: str, extraction: EnrichedConcertExtraction):
     """Append extracted concert data to the CSV file"""
     timestamp = datetime.now().isoformat()
     
@@ -105,6 +142,8 @@ def append_to_csv(source_image: str, extraction: ConcertExtraction):
                     timestamp,
                     source_image,
                     band_info.band_name,
+                    band_info.genre,
+                    band_info.country,
                     concert.venue,
                     concert.location,
                     concert.date,
@@ -114,7 +153,36 @@ def append_to_csv(source_image: str, extraction: ConcertExtraction):
     print(f"   Saved to {CSV_OUTPUT}")
 
 
-def process_image(image_path: Path):
+async def enrich_band(band_info: BandInfo) -> EnrichedBandInfo:
+    """Enrich a single band with genre and country info (runs async)"""
+    print(f"   Agent 2: Searching web for '{band_info.band_name}' info...")
+    
+    # Use the enrichment agent to get genre and country
+    enrichment_result = await enrichment_agent.run(
+        f"Find the genre and country of origin for the band: {band_info.band_name}"
+    )
+    
+    # Create enriched band info
+    enriched_band = EnrichedBandInfo(
+        band_name=band_info.band_name,
+        genre=enrichment_result.output.genre,
+        country=enrichment_result.output.country,
+        concerts=band_info.concerts
+    )
+    
+    # Print results
+    print(f"   Band: {enriched_band.band_name}")
+    print(f"      Genre: {enriched_band.genre}")
+    print(f"      Country: {enriched_band.country}")
+    for concert in enriched_band.concerts:
+        event_str = f" ({concert.event_name})" if concert.event_name else ""
+        print(f"      Venue: {concert.venue} - {concert.location}{event_str}")
+        print(f"      Date: {concert.date}")
+    
+    return enriched_band
+
+
+async def process_image(image_path: Path):
     """Process a single image and extract concert information"""
     if image_path.suffix.lower() not in IMAGE_EXTENSIONS:
         return
@@ -123,27 +191,41 @@ def process_image(image_path: Path):
     
     try:
         # Wait a moment to ensure file is fully written
-        time.sleep(0.5)
+        await asyncio.sleep(0.5)
         
-        # Read image and send to agent
+        # Read image and send to extraction agent
         image_data = image_path.read_bytes()
         media_type = get_media_type(image_path)
         
-        result = agent.run_sync([
+        print("   Agent 1: Extracting concert info from image...")
+        extraction_result = await extraction_agent.run([
             "Extract all concert information from this image.",
             BinaryContent(data=image_data, media_type=media_type),
         ])
         
-        # Print results
-        for band_info in result.output.bands:
-            print(f"   Band: {band_info.band_name}")
-            for concert in band_info.concerts:
-                event_str = f" ({concert.event_name})" if concert.event_name else ""
-                print(f"      Venue: {concert.venue} - {concert.location}{event_str}")
-                print(f"      Date: {concert.date}")
+        # Deduplicate bands by name (keep first occurrence, merge concerts)
+        unique_bands: dict[str, BandInfo] = {}
+        for band_info in extraction_result.output.bands:
+            band_name = band_info.band_name.strip().lower()
+            if band_name not in unique_bands:
+                unique_bands[band_name] = band_info
+            else:
+                # Merge concerts from duplicate band entries
+                unique_bands[band_name].concerts.extend(band_info.concerts)
+        
+        deduplicated_bands = list(unique_bands.values())
+        
+        # Enrich ALL bands in parallel using asyncio.gather
+        print(f"   Agent 2: Enriching {len(deduplicated_bands)} bands in parallel...")
+        enriched_bands = await asyncio.gather(
+            *[enrich_band(band_info) for band_info in deduplicated_bands]
+        )
+        
+        # Create enriched extraction result
+        enriched_extraction = EnrichedConcertExtraction(bands=list(enriched_bands))
         
         # Save to CSV
-        append_to_csv(image_path.name, result.output)
+        append_to_csv(image_path.name, enriched_extraction)
         
     except Exception as e:
         print(f"   Error processing {image_path.name}: {e}")
@@ -158,10 +240,10 @@ class ImageHandler(FileSystemEventHandler):
         
         image_path = Path(event.src_path)
         if image_path.suffix.lower() in IMAGE_EXTENSIONS:
-            process_image(image_path)
+            asyncio.run(process_image(image_path))
 
 
-def main():
+async def main():
     # Check that watch folder exists
     if not WATCH_FOLDER.exists():
         raise FileNotFoundError(f"Folder '{WATCH_FOLDER}' not found")
@@ -171,13 +253,12 @@ def main():
     # Initialize CSV
     initialize_csv()
     
-    # Process any existing images in the folder first
+    # Process any existing images in the folder first (in parallel)
     existing_images = [f for f in WATCH_FOLDER.iterdir() 
                        if f.suffix.lower() in IMAGE_EXTENSIONS]
     if existing_images:
-        print(f"\nProcessing {len(existing_images)} existing image(s)...")
-        for image_path in existing_images:
-            process_image(image_path)
+        print(f"\nProcessing {len(existing_images)} existing image(s) in parallel...")
+        await asyncio.gather(*[process_image(image_path) for image_path in existing_images])
     
     # Set up the watchdog observer
     event_handler = ImageHandler()
@@ -189,7 +270,7 @@ def main():
     
     try:
         while True:
-            time.sleep(1)
+            await asyncio.sleep(1)
     except KeyboardInterrupt:
         print("\nStopping watcher...")
         observer.stop()
@@ -199,6 +280,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
-
-# Can I have two agents? A second one adding more information about the bands?
+    asyncio.run(main())

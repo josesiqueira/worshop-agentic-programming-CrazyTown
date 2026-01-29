@@ -31,16 +31,11 @@ All the workshop is available on GitHub : github link
 
         More accurate!
 
-        
+
 
 2. The single API call to an LLM through python - ChatCompletions
 
 It is tied to the OpenAI library
-
-
-
-
-
 
 
 
@@ -64,39 +59,29 @@ Chat Completions API was the old way, since March 2025 we have Responses API
 
 4. Changing the model of the single API call to an LLM through python
 
-Now we use Claude Haiku 4.5
+Now we use Anthropic Claude Haiku 4.5
 
 https://docs.anthropic.com/en/docs/about-claude/models
 
 
 We had to change much of the code
 
-6. The need for agentic framework: One code -> various models
+6. Anthropic Responses API with Tool Calls + Allowed domains and Location
 
-Introducing Pydantic AI
+7. Structured information retrieval with OpenAI
 
-7. Retrieving structured information in JSON
+8. Structured information retrieval with OpenAI + Pydantic BaseModel
 
-The problem with it, many lines of code, difficult to maintain.
+9. Introducing Pydantic AI agentic framework - Quickly switch between Anthropic and OpenAI and other LLMs
 
-8. Retrieving structured information with pydantic BaseModels (from LLM queries)
-
-The simplicity of ensuring strong data type
-
-Pydantic is the most widely used data validation library for Python.
-
-9. Retrieving structured information with pydantic BaseModels (from an external file)
-
-10. Pydantic AI agent framework - Extracting structured information from an image
-
-# too much 10. Ingesting this retrieved structured information to a knowledge graph database
-
-# too much 11. Creating a MCP server to make the data in the database querible by the LLM
+10. Pydantic AI agentic framework - Extracting structured information from an image
 
 11. The agentic approach: agent observing a watch folder. Show the image from the book
 
-Environment ──(observations/percepts)──> Agent ──(actions)──> Environment
+Different automation levels.
+There is no unified agent definition.
 
+Environment ──(observations/percepts)──> Agent ──(actions)──> Environment
 
 To be credibly “agent-like,” you’d add at least:
 
@@ -105,9 +90,11 @@ To be credibly “agent-like,” you’d add at least:
 > 3. State/memory: internal state across steps (conversation state, working memory, task state)
 > 4. Goal/policy: an objective guiding action selection, not just answering once
 
-12. The agentic approach: agent observing a watch folder + a external database.
+12. The agentic approach: two agents
+12.-async, Agents in paralell.
 
-13. Have a conversation with the data.
+13. Have a conversation with the data. (CSV in the input)
+13.-MCP, Less input token use
 
 
 Recommended sources:

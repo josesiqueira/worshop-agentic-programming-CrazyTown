@@ -67,3 +67,16 @@ print(response.choices[0].message.content)
 
 # Alternative way using the Responses API
 # https://api.openai.com/v1/responses/{response_id}
+
+
+"""
+jose@jose-pc:~/Documents/Crazy Town$ python3 lesson2.py 
+ChatCompletion(id='chatcmpl-D3TYcqil9ut3H1uD0qieLElsk19ii', choices=[Choice(finish_reason='stop', index=0, logprobs=None, message=ChatCompletionMessage(content='Crazy Town Tampere (the coworking/community hub) is located in **Finlayson area**, at:\n\n**Crazy Town Tampere (Finlayson)  \nVäinö Linnan aukio 13, 33210 Tampere, Finland**\n\nIt’s in the old Finlayson factory complex, near the city center.', refusal=None, role='assistant', annotations=[], audio=None, function_call=None, tool_calls=None))], created=1769720974, model='gpt-5.2-2025-12-11', object='chat.completion', service_tier='default', system_fingerprint=None, usage=CompletionUsage(completion_tokens=71, prompt_tokens=15, total_tokens=86, completion_tokens_details=CompletionTokensDetails(accepted_prediction_tokens=0, audio_tokens=0, reasoning_tokens=0, rejected_prediction_tokens=0), prompt_tokens_details=PromptTokensDetails(audio_tokens=0, cached_tokens=0)))
+<class 'openai.types.chat.chat_completion.ChatCompletion'>
+Crazy Town Tampere (the coworking/community hub) is located in **Finlayson area**, at:
+
+**Crazy Town Tampere (Finlayson)  
+Väinö Linnan aukio 13, 33210 Tampere, Finland**
+
+It’s in the old Finlayson factory complex, near the city center.
+"""

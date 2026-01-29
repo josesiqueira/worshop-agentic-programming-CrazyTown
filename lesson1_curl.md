@@ -12,6 +12,11 @@ curl https://api.openai.com/v1/responses \
   }'
 ```
 
+Copy and paste in terminal, change the YOUR_OPENAI_API_KEY first
+```
+curl https://api.openai.com/v1/responses -H "Content-Type: application/json" -H "Authorization: Bearer YOUR_API_KEY" -d '{"model": "gpt-4o", "tools": [{"type": "web_search"}], "input": "Tell me where Crazy Town in Tampere is located."}'
+```
+
 ### Response
 
 ```json
@@ -99,6 +104,11 @@ curl https://api.openai.com/v1/responses \
     ],
     "input": "Tell me where Crazy Town in Tampere is located."
   }'
+```
+
+Copy and paste in terminal, change the YOUR_OPENAI_API_KEY first
+```
+curl https://api.openai.com/v1/responses -H "Content-Type: application/json" -H "Authorization: Bearer YOUR_OPENAI_API_KEY" -d '{"model": "gpt-5.2", "tools": [{"type": "web_search"}], "input": "Tell me where Crazy Town in Tampere is located."}'
 ```
 
 ### Response

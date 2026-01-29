@@ -38,18 +38,3 @@ print(response.model_dump_json(indent=2))
 print(type(response))
 # What is the message content?
 #print(response.output_text)
-
-
-
-
-# Alternative way using the Responses API
-# https://api.openai.com/v1/responses/{response_id}
-
-# You need to pass the response ID from the previous response
-#response_id = response.id
-
-#print(response_id)
-
-# curl https://api.openai.com/v1/responses/{response_id} \
-#   -H "Authorization: Bearer YOUR_OPENAI_API_KEY"
-

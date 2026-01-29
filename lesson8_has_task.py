@@ -49,8 +49,12 @@ for movie in movies.movies:
 
 # Problem : What if you need to change the Model?
 
+# First task - Retrieve the top 5 ranked movies in the imdb and then include the web search to search only in imdb website.
 
-# CHANGE THIS TASK
-# After that: Homework - imporove what you created to retrieve the top 5 ranked movies in the imdb and then include the web search to search only in imdb website.
+# Second task: 
+# Implement in a similar fashion a script that displays all the gold medals won by Finland men's ice hockey team in the World Cup history,
+# Display the year, location (City and Country), Top Scorer, final match score, and against which team.
+# Use Pydantic BaseModel to structure the output.
+# Use OpenAI Responses API with web search tool call to get the most accurate information.
 
-# After that: Task - imporove what you created to retrieve the top 5 ranked movies in the imdb and then include the web search to search only in imdb website.
+

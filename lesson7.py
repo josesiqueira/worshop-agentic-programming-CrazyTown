@@ -75,4 +75,4 @@ print("\nUsage:", response.usage)
 
 # Now let's make the JSON more maintanable by using pydantic BaseModel
 
-# Another problem: Everytime you run this, the output may vary.
+# Second problem: Everytime you run this, the output may vary. What can you do?

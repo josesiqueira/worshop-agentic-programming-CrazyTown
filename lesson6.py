@@ -47,9 +47,11 @@ response = client.messages.create(
 
 # What is this response?
 #print(message)
+print("response:")
 print(response.model_dump_json(indent=2))
 
 # What is the type of this response?
+print("response type:")
 print(type(response))
 # What is the message content?
 #print(response.output_text)
@@ -60,4 +62,5 @@ for block in response.content:
     if block.type == "text":
         final_message += block.text
 
+print("Printing only the final message content:")
 print(final_message)
